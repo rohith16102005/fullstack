@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>UrbanMart | Shop First - Persistent Cart E-Commerce</title>
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f5f7fb;
+            color: #1e293b;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* HEADER & NAV */
+        .top-bar {
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(2px);
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+        .logo span {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #5b6e8c;
+            display: block;
+        }
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            background: #f1f5f9;
+            padding: 0.7rem 1.2rem;
+            border-radius: 60px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .cart-icon:hover {
+            background: #e6edf4;
+            transform: scale(1.02);
+        }
+        .cart-icon i {
+            font-size: 1.6rem;
+            color: #1e40af;
+        }
+        .cart-count {
+            background: #dc2626;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border-radius: 40px;
+            padding: 0.2rem 0.6rem;
+            min-width: 24px;
+            text-align: center;
+        }
+        .cart-total {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #0f172a;
+        }
+
+        /* SHOP BUTTON SECTION - LANDING */
+        .shop-landing {
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            border-radius: 48px;
+            margin: 2rem;
+            transition: all 0.3s ease;
+        }
+        .shop-landing.hidden {
+            display: none;
+        }
+        .hero-icon {
+            font-size: 5rem;
+            color: #2563eb;
+            margin-bottom: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .shop-landing h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e293b, #3b82f6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+        .shop-landing p {
+            color: #475569;
+            max-width: 500px;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        .shop-now-btn {
+            background: linear-gradient(95deg, #2563eb, #4f46e5);
+            border: none;
+            padding: 1rem 2.8rem;
+            border-radius: 60px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+        }
+        .shop-now-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 28px rgba(37,99,235,0.4);
+        }
+
+        /* MAIN SHOPPING INTERFACE - HIDDEN INITIALLY */
+        .shopping-interface {
+            display: none;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .shopping-interface.active {
+            display: block;
+        }
+        
+        .main-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+        }
+        @media (max-width: 900px) {
+            .main-wrapper {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .cart-sidebar {
+                order: 2;
+            }
+            .products-grid {
+                order: 1;
+            }
+        }
+
+        /* PRODUCTS SECTION */
+        .products-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .products-header h2 {
+            font-weight: 600;
+            font-size: 1.6rem;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.8rem;
+        }
+        .product-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.25s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f8;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.1);
+            border-color: #cbd5e1;
+        }
+        .product-img {
+            height: 200px;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: #334155;
+            border-bottom: 1px solid #eef2f8;
+        }
+        .product-info {
+            padding: 1.2rem;
+        }
+        .product-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.4rem;
+        }
+        .product-price {
+            font-weight: 700;
+            color: #2563eb;
+            font-size: 1.3rem;
+            margin: 0.5rem 0;
+        }
+        .add-btn {
+            width: 100%;
+            background: #1e293b;
+            border: none;
+            padding: 0.7rem;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 0.5rem;
+        }
+        .add-btn:hover {
+            background: #0f172a;
+            transform: scale(0.98);
+        }
+
+        /* CART SIDEBAR */
+        .cart-sidebar {
+            background: white;
+            border-radius: 28px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+            border: 1px solid #eef2f8;
+            position: sticky;
+            top: 90px;
+            height: fit-content;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .cart-sidebar h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #eef2f8;
+            padding-bottom: 0.8rem;
+        }
+        .cart-items-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 55vh;
+            margin: 0.5rem 0 1rem;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .cart-item-info {
+            flex: 2;
+        }
+        .cart-item-title {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .cart-item-price {
+            font-size: 0.8rem;
+            color: #475569;
+        }
+        .cart-item-qty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 0.2rem 0.5rem;
+            border-radius: 40px;
+        }
+        .qty-btn {
+            background: none;
+            border: none;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 24px;
+            border-radius: 50%;
+            transition: 0.1s;
+        }
+        .qty-btn:hover {
+            background: #e2e8f0;
+        }
+        .cart-item-subtotal {
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 60px;
+            text-align: right;
+        }
+        .remove-item {
+            color: #ef4444;
+            background: none;
+            border: none;
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .cart-summary {
+            border-top: 2px dashed #e2e8f0;
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.6rem 0;
+            font-weight: 500;
+        }
+        .checkout-btn {
+            background: linear-gradient(95deg, #2563eb, #4f46e5);
+            width: 100%;
+            border: none;
+            padding: 0.9rem;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .clear-cart {
+            background: #f1f5f9;
+            color: #334155;
+            margin-top: 0.6rem;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+        .empty-cart-msg {
+            text-align: center;
+            color: #94a3b8;
+            padding: 2rem 0;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            max-width: 400px;
+            width: 90%;
+            padding: 2rem;
+            border-radius: 32px;
+            text-align: center;
+        }
+        .modal-content button {
+            margin-top: 1rem;
+            background: #2563eb;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #5b6e8c;
+            font-size: 0.8rem;
+        }
+        .toast-msg {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            z-index: 1100;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+        .back-to-shop {
+            background: none;
+            border: none;
+            color: #2563eb;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        .back-to-shop:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="top-bar">
+    <div class="nav-container">
+        <div class="logo">
+            <h1>UrbanMart <i class="fas fa-store"></i></h1>
+            <span>shop first · cart persistent</span>
+        </div>
+        <div class="cart-icon" id="cartIconBtn">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count" id="cartCountBadge">0</span>
+            <span class="cart-total" id="cartTotalBadge">$0</span>
+        </div>
+    </div>
+</div>
+
+<!-- LANDING SECTION WITH SHOP BUTTON -->
+<div class="shop-landing" id="shopLanding">
+    <div class="hero-icon">
+        <i class="fas fa-shopping-bag"></i>
+    </div>
+    <h2>Ready to Elevate Your Style?</h2>
+    <p>Explore curated essentials, premium quality, and seamless shopping with a cart that remembers you.</p>
+    <button class="shop-now-btn" id="shopNowBtn">
+        <i class="fas fa-arrow-right"></i> Start Shopping
+    </button>
+</div>
+
+<!-- MAIN SHOPPING INTERFACE (Hidden until shop button clicked) -->
+<div class="shopping-interface" id="shoppingInterface">
+    <div class="main-wrapper">
+        <!-- Products Grid -->
+        <div class="products-section">
+            <div class="products-header">
+                <h2><i class="fas fa-tag"></i> Featured Collection</h2>
+                <button class="back-to-shop" id="backToShopBtn">
+                    <i class="fas fa-arrow-left"></i> Back to Shop Button
+                </button>
+            </div>
+            <div class="products-grid" id="productsContainer">
+                <!-- dynamic products -->
+            </div>
+        </div>
+
+        <!-- Cart Sidebar -->
+        <div class="cart-sidebar" id="cartSidebar">
+            <h3>Your Cart <i class="fas fa-bag-shopping"></i></h3>
+            <div class="cart-items-list" id="cartItemsList">
+                <div class="empty-cart-msg">Your cart is empty</div>
+            </div>
+            <div class="cart-summary" id="cartSummary">
+                <div class="summary-row"><span>Subtotal:</span><span id="subtotalAmount">$0.00</span></div>
+                <div class="summary-row"><span>Shipping:</span><span id="shippingEstimate">$0.00</span></div>
+                <div class="summary-row"><strong>Total:</strong><strong id="totalAmount">$0.00</strong></div>
+                <button class="checkout-btn" id="checkoutBtn"><i class="fas fa-lock"></i> Secure Checkout</button>
+                <button class="clear-cart" id="clearCartBtn"><i class="fas fa-trash-alt"></i> Clear Cart</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>© UrbanMart — cart saved locally & synced with SQL simulation (persistent across sessions)</footer>
+<div id="toastMsg" class="toast-msg"></div>
+
+<!-- Modal for checkout demo -->
+<div id="checkoutModal" class="modal">
+    <div class="modal-content">
+        <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981;"></i>
+        <h3>Order Placed!</h3>
+        <p>Your cart has been saved and order recorded. (Demo persistence)</p>
+        <button id="closeModalBtn">Continue Shopping</button>
+    </div>
+</div>
+
+<script>
+    // ---------- PRODUCT CATALOG ----------
+    const PRODUCTS = [
+        { id: 1, name: "Minimalist Backpack", price: 49.99, icon: "fas fa-bag-shopping", category: "bags" },
+        { id: 2, name: "Wireless Headphones", price: 89.99, icon: "fas fa-headphones", category: "audio" },
+        { id: 3, name: "Smart Watch Pro", price: 199.99, icon: "fas fa-clock", category: "wearables" },
+        { id: 4, name: "Ceramic Mug", price: 14.99, icon: "fas fa-mug-hot", category: "home" },
+        { id: 5, name: "Desk Lamp", price: 34.99, icon: "fas fa-lightbulb", category: "home" },
+        { id: 6, name: "Cotton T-Shirt", price: 24.99, icon: "fas fa-tshirt", category: "clothing" }
+    ];
+
+    // ---------- GLOBAL STATE ----------
+    let cartItems = [];  // will be loaded from localStorage (SQL simulation)
+    
+    // Helper: Save cart to both localStorage and simulate SQL
+    function persistCartToSQL(cartArray) {
+        localStorage.setItem('urbanmart_cart', JSON.stringify(cartArray));
+        // Simulated SQL log: In real app this would be AJAX to PHP/MySQL backend
+        console.log("🧾 SQL PERSISTENCE SIMULATION: REPLACE INTO cart (product_id, quantity, name, price) VALUES " + 
+            cartArray.map(item => `(${item.id}, ${item.quantity}, '${item.name.replace(/'/g, "''")}', ${item.price})`).join(", ") + ";");
+    }
+    
+    // Load cart from persistent storage (SQL simulation)
+    function loadCartFromPersistence() {
+        const saved = localStorage.getItem('urbanmart_cart');
+        if (saved) {
+            try {
+                cartItems = JSON.parse(saved);
+            } catch(e) { cartItems = []; }
+        } else {
+            cartItems = [];
+        }
+        cartItems = cartItems.filter(item => item && item.id && typeof item.quantity === 'number');
+        renderCartUI();
+        updateCartBadge();
+    }
+    
+    function updateCartBadge() {
+        const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const badge = document.getElementById('cartCountBadge');
+        const totalSpan = document.getElementById('cartTotalBadge');
+        if (badge) badge.innerText = totalItems;
+        if (totalSpan) totalSpan.innerHTML = `$${totalPrice.toFixed(2)}`;
+    }
+    
+    function addToCart(productId, productName, productPrice) {
+        const existing = cartItems.find(item => item.id === productId);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cartItems.push({
+                id: productId,
+                name: productName,
+                price: productPrice,
+                quantity: 1
+            });
+        }
+        persistCartToSQL(cartItems);
+        renderCartUI();
+        updateCartBadge();
+        showToast(`🛒 Added ${productName} to cart`);
+    }
+    
+    function updateQuantity(productId, delta) {
+        const idx = cartItems.findIndex(item => item.id === productId);
+        if (idx === -1) return;
+        const newQty = cartItems[idx].quantity + delta;
+        if (newQty <= 0) {
+            cartItems.splice(idx, 1);
+        } else {
+            cartItems[idx].quantity = newQty;
+        }
+        persistCartToSQL(cartItems);
+        renderCartUI();
+        updateCartBadge();
+    }
+    
+    function removeItem(productId) {
+        cartItems = cartItems.filter(item => item.id !== productId);
+        persistCartToSQL(cartItems);
+        renderCartUI();
+        updateCartBadge();
+        showToast(`Item removed from cart`);
+    }
+    
+    function clearCart() {
+        if (cartItems.length === 0) return;
+        cartItems = [];
+        persistCartToSQL(cartItems);
+        renderCartUI();
+        updateCartBadge();
+        showToast(`Cart cleared`);
+    }
+    
+    function showToast(msg) {
+        const toast = document.getElementById('toastMsg');
+        toast.innerText = msg;
+        toast.style.opacity = '1';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+        }, 2000);
+    }
+    
+    // Render cart sidebar
+    function renderCartUI() {
+        const cartContainer = document.getElementById('cartItemsList');
+        if (!cartContainer) return;
+        if (cartItems.length === 0) {
+            cartContainer.innerHTML = `<div class="empty-cart-msg"><i class="fas fa-cart-shopping"></i> Your cart feels lonely...</div>`;
+            document.getElementById('subtotalAmount').innerText = "$0.00";
+            document.getElementById('shippingEstimate').innerText = "$0.00";
+            document.getElementById('totalAmount').innerText = "$0.00";
+            return;
+        }
+        
+        let itemsHtml = '';
+        let subtotal = 0;
+        cartItems.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            subtotal += itemTotal;
+            itemsHtml += `
+                <div class="cart-item" data-id="${item.id}">
+                    <div class="cart-item-info">
+                        <div class="cart-item-title">${escapeHtml(item.name)}</div>
+                        <div class="cart-item-price">$${item.price.toFixed(2)}</div>
+                    </div>
+                    <div class="cart-item-qty">
+                        <button class="qty-btn dec-qty" data-id="${item.id}">−</button>
+                        <span>${item.quantity}</span>
+                        <button class="qty-btn inc-qty" data-id="${item.id}">+</button>
+                        <button class="remove-item" data-id="${item.id}"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="cart-item-subtotal">$${itemTotal.toFixed(2)}</div>
+                </div>
+            `;
+        });
+        cartContainer.innerHTML = itemsHtml;
+        
+        const shipping = subtotal > 50 ? 0 : (subtotal === 0 ? 0 : 5.99);
+        const total = subtotal + shipping;
+        document.getElementById('subtotalAmount').innerText = `$${subtotal.toFixed(2)}`;
+        document.getElementById('shippingEstimate').innerHTML = shipping === 0 ? "$0.00 (Free)" : `$${shipping.toFixed(2)}`;
+        document.getElementById('totalAmount').innerHTML = `$${total.toFixed(2)}`;
+        
+        // attach events
+        document.querySelectorAll('.dec-qty').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                updateQuantity(id, -1);
+            });
+        });
+        document.querySelectorAll('.inc-qty').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                updateQuantity(id, 1);
+            });
+        });
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                removeItem(id);
+            });
+        });
+    }
+    
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // Render products (only called after shop interface is active)
+    function renderProductsUI() {
+        const container = document.getElementById('productsContainer');
+        if (!container) return;
+        let productsHtml = '';
+        PRODUCTS.forEach(prod => {
+            productsHtml += `
+                <div class="product-card">
+                    <div class="product-img"><i class="${prod.icon}" style="font-size: 3.5rem;"></i></div>
+                    <div class="product-info">
+                        <div class="product-title">${escapeHtml(prod.name)}</div>
+                        <div class="product-price">$${prod.price.toFixed(2)}</div>
+                        <button class="add-btn" data-id="${prod.id}" data-name="${escapeHtml(prod.name)}" data-price="${prod.price}">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = productsHtml;
+        
+        document.querySelectorAll('.add-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.dataset.id);
+                const name = btn.dataset.name;
+                const price = parseFloat(btn.dataset.price);
+                addToCart(id, name, price);
+            });
+        });
+    }
+    
+    // Checkout modal
+    function handleCheckout() {
+        if (cartItems.length === 0) {
+            showToast("Your cart is empty. Add some items first!");
+            return;
+        }
+        console.log("ORDER COMMIT: SQL INSERT INTO orders ...");
+        const modal = document.getElementById('checkoutModal');
+        modal.style.display = 'flex';
+    }
+    
+    function closeModalAndClear() {
+        const modal = document.getElementById('checkoutModal');
+        modal.style.display = 'none';
+        if (cartItems.length > 0) {
+            cartItems = [];
+            persistCartToSQL(cartItems);
+            renderCartUI();
+            updateCartBadge();
+            showToast("🎉 Order confirmed! Cart cleared.");
+        }
+    }
+    
+    // ---------- SHOP BUTTON LOGIC (main requirement) ----------
+    function showShoppingInterface() {
+        const landing = document.getElementById('shopLanding');
+        const shoppingInterface = document.getElementById('shoppingInterface');
+        landing.classList.add('hidden');
+        shoppingInterface.classList.add('active');
+        // Render products for first time
+        renderProductsUI();
+        // load cart again to reflect any persisted data
+        loadCartFromPersistence();
+    }
+    
+    function resetToLanding() {
+        const landing = document.getElementById('shopLanding');
+        const shoppingInterface = document.getElementById('shoppingInterface');
+        landing.classList.remove('hidden');
+        shoppingInterface.classList.remove('active');
+        // Cart remains persisted, but interface hidden
+    }
+    
+    // Event listeners and initial load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Load cart from SQL simulation (persistent)
+        loadCartFromPersistence();
+        
+        // SHOP BUTTON triggers main interface
+        const shopBtn = document.getElementById('shopNowBtn');
+        if (shopBtn) shopBtn.addEventListener('click', showShoppingInterface);
+        
+        // Back to shop button (inside interface) returns to landing, but cart persists
+        const backBtn = document.getElementById('backToShopBtn');
+        if (backBtn) backBtn.addEventListener('click', resetToLanding);
+        
+        // clear cart button
+        const clearBtn = document.getElementById('clearCartBtn');
+        if (clearBtn) clearBtn.addEventListener('click', () => clearCart());
+        
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if (checkoutBtn) checkoutBtn.addEventListener('click', handleCheckout);
+        
+        const closeModal = document.getElementById('closeModalBtn');
+        if (closeModal) closeModal.addEventListener('click', closeModalAndClear);
+        
+        const modalBg = document.getElementById('checkoutModal');
+        modalBg.addEventListener('click', (e) => {
+            if (e.target === modalBg) closeModalAndClear();
+        });
+        
+        // cart icon scroll to cart sidebar if interface active
+        const cartIconBtn = document.getElementById('cartIconBtn');
+        if (cartIconBtn) {
+            cartIconBtn.addEventListener('click', () => {
+                const isActive = document.getElementById('shoppingInterface').classList.contains('active');
+                if (isActive) {
+                    const cartSide = document.querySelector('.cart-sidebar');
+                    if (cartSide) cartSide.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    showToast("Click 'Start Shopping' first to explore!");
+                }
+            });
+        }
+    });
+    
+    // SQL SCHEMA information for demonstration
+    console.log(`
+    ========== SQL SCHEMA (Persistent Cart Demo) ==========
+    CREATE TABLE cart_items (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        product_id INT NOT NULL,
+        quantity INT DEFAULT 1,
+        name VARCHAR(255),
+        price DECIMAL(10,2),
+        session_id VARCHAR(100)
+    );
+    -- Cart survives page reload via localStorage acting as SQL simulation.
+    -- Full MySQL/PostgreSQL integration ready via backend.
+    =======================================================
+    `);
+</script>
+</body>
+</html>
